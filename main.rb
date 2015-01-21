@@ -80,8 +80,13 @@ def save_all_runs
   puts "#{activities.length} activities"
   activities.each do |activity|
     puts "Activity #{activity['id']}... "
-    run_to_sql(@client.retrieve_an_activity(activity['id']))
-    puts "handled."
+    begin
+      run_to_sql(@client.retrieve_an_activity(activity['id']))
+      puts "handled."
+    rescue Exception => e
+      puts e
+      puts "FAILED TO HANDLE ACTIVITY #{activity['id']}"
+    end
   end
   puts "finished"
 end
