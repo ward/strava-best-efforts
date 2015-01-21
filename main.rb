@@ -86,6 +86,13 @@ def save_all_runs
   puts "finished"
 end
 
+def pretty_print_time seconds
+  if seconds < 3600
+    return format("%d:%02d", seconds / 60, seconds % 60)
+  else
+    return format("%d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
+  end
+end
 
 options = OpenStruct.new
 options.fetch = false
@@ -93,7 +100,9 @@ OptionParser.new do |opts|
   opts.banner = "Usage: main.rb [options]"
 
   opts.on("-d", "--distance DISTANCE",
-          "Distance for which to output your leaderboard") do |distance|
+          "Distance for which to output your leaderboard.",
+          "Choices: 400, 805, 1000, 1609, 3219, 5000, 10000.",
+          "(and higher if you did those)") do |distance|
     options[:distance] = distance
   end
   opts.on("-f", "--[no-]fetch",
@@ -113,9 +122,18 @@ config = YAML.load_file('config.yml')
 if options[:fetch]
   save_all_runs
 elsif not options[:distance].nil?
-  @db.execute("SELECT * FROM best_effort where distance = ?",
+  puts "For distance: " + options[:distance]
+  ctr = 1
+  @db.execute("SELECT best_effort.elapsed_time, activity.start_date
+              FROM best_effort
+              JOIN activity
+              ON best_effort.activity_id = activity.id
+              WHERE best_effort.distance = ?
+              ORDER BY best_effort.elapsed_time",
               options[:distance]) do |row|
-    p row
+    puts format("%3d. %8s     (%s)",
+                ctr, pretty_print_time(row[0]), Time.at(row[1]).strftime("%F"))
+    ctr = ctr + 1
   end
 else
   puts "Nothing to do..."
