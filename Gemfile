@@ -1,3 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'oauth2'
+# We are lazy
+gem 'strava-api-v3'

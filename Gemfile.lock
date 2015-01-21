@@ -1,22 +1,18 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    faraday (0.9.1)
-      multipart-post (>= 1.2, < 3)
-    jwt (1.2.0)
+    httparty (0.13.3)
+      json (~> 1.8)
+      multi_xml (>= 0.5.2)
+    json (1.8.2)
     multi_json (1.10.1)
     multi_xml (0.5.5)
-    multipart-post (2.0.0)
-    oauth2 (1.0.0)
-      faraday (>= 0.8, < 0.10)
-      jwt (~> 1.0)
-      multi_json (~> 1.3)
-      multi_xml (~> 0.5)
-      rack (~> 1.2)
-    rack (1.6.0)
+    strava-api-v3 (0.1.0)
+      httparty
+      multi_json
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  oauth2
+  strava-api-v3
