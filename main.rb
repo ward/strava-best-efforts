@@ -6,6 +6,7 @@ require 'sqlite3'
 require 'time'
 # For options
 require 'optparse'
+require 'logger'
 
 # Gets a list of summaries for all the runs. Since we need the best
 # efforts, this will not do.
@@ -14,6 +15,7 @@ def get_all_runs
   runs = []
 
   begin
+    puts "Fetching activities page #{page}..."
     acts = @client.list_athlete_activities(per_page: 50, page: page)
     only_runs = acts.reject { |act| act['type'] != 'Run' }
     runs = runs + only_runs
@@ -77,13 +79,15 @@ end
 def save_all_runs
   activities = get_all_runs()
 
-  puts "#{activities.length} activities"
-  activities.each do |activity|
-    puts "Activity #{activity['id']}... "
+  puts "#{activities.length} activities found."
+  puts "Fetching data for each."
+  activities.each_with_index do |activity,idx|
+    print "[#{idx}/#{activities.length}] Activity #{activity['id']}... "
+    $stdout.flush
     begin
       run_to_sql(@client.retrieve_an_activity(activity['id']))
       puts "handled."
-    rescue Exception => e
+    rescue StandardError => e
       puts e
       puts "FAILED TO HANDLE ACTIVITY #{activity['id']}"
     end
@@ -106,7 +110,8 @@ OptionParser.new do |opts|
 
   opts.on("-d", "--distance DISTANCE",
           "Distance for which to output your leaderboard.",
-          "Choices: 400, 805, 1000, 1609, 3219, 5000, 10000.",
+          "Choices: 400, 805, 1000, 1609, 3219, 5000",
+          "10000, 15000, 16090, 20000, 21097",
           "(and higher if you did those)") do |distance|
     options[:distance] = distance
   end
@@ -121,7 +126,10 @@ OptionParser.new do |opts|
 end.parse!
 
 config = YAML.load_file('config.yml')
-@client = Strava::Api::V3::Client.new(access_token: config['access_token'])
+# Strava client's default log level is debug which is a bit spammy...
+logger = Logger.new(STDOUT)
+logger.level = Logger::WARN
+@client = Strava::Api::V3::Client.new(access_token: config['access_token'], logger: logger)
 @db = SQLite3::Database.new "strava.db"
 
 if options[:fetch]
