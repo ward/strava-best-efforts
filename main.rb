@@ -4,11 +4,8 @@ require 'yaml'
 require 'sqlite3'
 # For parse
 require 'time'
-
-config = YAML.load_file('config.yml')
-
-@client = Strava::Api::V3::Client.new(access_token: config['access_token'])
-@db = SQLite3::Database.new "strava.db"
+# For options
+require 'optparse'
 
 # Gets a list of summaries for all the runs. Since we need the best
 # efforts, this will not do.
@@ -75,13 +72,52 @@ def run_to_sql run
   end
 end
 
-activities = get_all_runs()
+# Fetches list of all runs, fetches info for each run, saves information
+# locally.
+def save_all_runs
+  activities = get_all_runs()
 
-puts "#{activities.length} activities"
-activities.each do |activity|
-  puts "Activity #{activity['id']}... "
-  run_to_sql(@client.retrieve_an_activity(activity['id']))
-  puts "handled."
+  puts "#{activities.length} activities"
+  activities.each do |activity|
+    puts "Activity #{activity['id']}... "
+    run_to_sql(@client.retrieve_an_activity(activity['id']))
+    puts "handled."
+  end
+  puts "finished"
 end
-puts "finished"
+
+
+options = OpenStruct.new
+options.fetch = false
+OptionParser.new do |opts|
+  opts.banner = "Usage: main.rb [options]"
+
+  opts.on("-d", "--distance DISTANCE",
+          "Distance for which to output your leaderboard") do |distance|
+    options[:distance] = distance
+  end
+  opts.on("-f", "--[no-]fetch",
+          "Connects to Strava and fetches all run info to save locally") do |v|
+    options[:fetch] = v
+  end
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+config = YAML.load_file('config.yml')
+@client = Strava::Api::V3::Client.new(access_token: config['access_token'])
+@db = SQLite3::Database.new "strava.db"
+
+if options[:fetch]
+  save_all_runs
+elsif not options[:distance].nil?
+  @db.execute("SELECT * FROM best_effort where distance = ?",
+              options[:distance]) do |row|
+    p row
+  end
+else
+  puts "Nothing to do..."
+end
 
