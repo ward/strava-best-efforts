@@ -1,4 +1,4 @@
-CREATE TABLE "activity" (
+CREATE TABLE IF NOT EXISTS "activity" (
     "id" INTEGER PRIMARY KEY NOT NULL,
     "resource_state" INTEGER,
     "external_id" TEXT,
@@ -17,7 +17,7 @@ CREATE TABLE "activity" (
     "private" INTEGER,
     "flagged" INTEGER
 );
-CREATE TABLE "best_effort" (
+CREATE TABLE IF NOT EXISTS "best_effort" (
     "distance" INTEGER NOT NULL,
     "moving_time" INTEGER NOT NULL,
     "elapsed_time" INTEGER NOT NULL,

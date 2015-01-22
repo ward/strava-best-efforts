@@ -19,10 +19,11 @@ class MyStrava
     @logger = options[:logger] || Logger.new(STDOUT)
     @client = Strava::Api::V3::Client.new(access_token: options[:access_token], logger: @logger)
     @db = SQLite3::Database.new "strava.db"
+    create_db_schema(@db)
 	end
 	
   # Contact Strava and fetch data to save locally
-	def fetch
+  def fetch
     fetch_and_save_runs(list_all_runs())
   end
 
@@ -41,6 +42,13 @@ class MyStrava
   ##############################################################################
 
   private
+
+  # Creates the correct schema in the sql database
+  # Makes use of the create_tables.sql file
+  def create_db_schema db
+    sqlinput = File.open('create_tables.sql', 'r') { |f| f.read }
+    db.execute_batch(sqlinput)
+  end
 
   # Gets a list of summaries for all the runs. Since we need the best
   # efforts, this will not do.
