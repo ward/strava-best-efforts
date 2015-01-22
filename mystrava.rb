@@ -27,9 +27,9 @@ class MyStrava
     fetch_and_save_runs(list_all_runs())
   end
 
-  # Returns best efforts for a certain distance ordered from best to worst
-  # Each entry is an array [timeinseconds, startdateinseconds]
-  def best_efforts(distance)
+  # Returns array of best efforts for a certain distance ordered from best to
+  # worst. Each entry is an array [timeinseconds, startdateinseconds]
+  def best_efforts_for_distance(distance)
     return @db.execute("SELECT best_effort.elapsed_time, activity.start_date
                         FROM best_effort
                         JOIN activity
@@ -37,6 +37,16 @@ class MyStrava
                         WHERE best_effort.distance = ?
                         ORDER BY best_effort.elapsed_time",
                         distance)
+  end
+
+  # Returns array of best efforts from a certain activity from shortest to
+  # longest distance. Each entry is an array [distance, elapsed_time]
+  def best_efforts_for_activity(activity)
+    return @db.execute("SELECT distance, elapsed_time
+                        FROM best_effort
+                        WHERE activity_id = ?
+                        ORDER BY distance",
+                        activity)
   end
 
   ##############################################################################

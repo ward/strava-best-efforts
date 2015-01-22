@@ -17,6 +17,10 @@ options.fetch = false
 OptionParser.new do |opts|
   opts.banner = "Usage: main.rb [options]"
 
+  opts.on("-a", "--activity ACTIVITYID",
+          "Gets the best efforts related to a certain activity") do |activity|
+    options[:activity] = activity
+  end
   opts.on("-d", "--distance DISTANCE",
           "Distance for which to output your leaderboard.",
           "Choices: 400, 805, 1000, 1609, 3219, 5000",
@@ -43,10 +47,16 @@ if options[:fetch]
   strava.fetch()
 elsif not options[:distance].nil?
   puts "For distance: " + options[:distance]
-  efforts = strava.best_efforts(options[:distance])
+  efforts = strava.best_efforts_for_distance(options[:distance])
   efforts.each.with_index(1) do |row,idx|
     puts format("%3d. %8s     (%s)",
                 idx, pretty_print_time(row[0]), Time.at(row[1]).strftime("%F"))
+  end
+elsif not options[:activity].nil?
+  puts "For activity: " + options[:activity]
+  efforts = strava.best_efforts_for_activity(options[:activity])
+  efforts.each do |effort|
+    puts format("%6d: %8s", effort[0], pretty_print_time(effort[1]))
   end
 else
   puts "Nothing to do..."
