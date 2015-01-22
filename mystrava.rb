@@ -9,6 +9,9 @@ require 'logger'
 class FalseClass; def to_i; 0 end end
 class TrueClass; def to_i; 1 end end
 
+# Handles things related to Strava.
+# Can fetch information from the Strava API to save it locally
+# Performs queries on the locally saved data.
 class MyStrava
 	def initialize(options={})
     raise ArgumentError if options[:access_token].nil?
@@ -23,6 +26,8 @@ class MyStrava
     fetch_and_save_runs(list_all_runs())
   end
 
+  # Returns best efforts for a certain distance ordered from best to worst
+  # Each entry is an array [timeinseconds, startdateinseconds]
   def best_efforts(distance)
     return @db.execute("SELECT best_effort.elapsed_time, activity.start_date
                         FROM best_effort
