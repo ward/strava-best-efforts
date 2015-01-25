@@ -4,35 +4,36 @@ require 'optparse'
 require 'logger'
 require './mystrava'
 
-def pretty_print_time seconds
+def pretty_print_time(seconds)
   if seconds < 3600
-    return format("%d:%02d", seconds / 60, seconds % 60)
+    return format('%d:%02d', seconds / 60, seconds % 60)
   else
-    return format("%d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
+    return format('%d:%02d:%02d', seconds / 3600,
+                  (seconds % 3600) / 60, seconds % 60)
   end
 end
 
 options = OpenStruct.new
 options.fetch = false
 OptionParser.new do |opts|
-  opts.banner = "Usage: main.rb [options]"
+  opts.banner = 'Usage: main.rb [options]'
 
-  opts.on("-a", "--activity ACTIVITYID",
-          "Gets the best efforts related to a certain activity") do |activity|
+  opts.on('-a', '--activity ACTIVITYID',
+          'Gets the best efforts related to a certain activity') do |activity|
     options[:activity] = activity
   end
-  opts.on("-d", "--distance DISTANCE",
-          "Distance for which to output your leaderboard.",
-          "Choices: 400, 805, 1000, 1609, 3219, 5000",
-          "10000, 15000, 16090, 20000, 21097",
-          "(and higher if you did those)") do |distance|
+  opts.on('-d', '--distance DISTANCE',
+          'Distance for which to output your leaderboard.',
+          'Choices: 400, 805, 1000, 1609, 3219, 5000',
+          '10000, 15000, 16090, 20000, 21097',
+          '(and higher if you did those)') do |distance|
     options[:distance] = distance
   end
-  opts.on("-f", "--[no-]fetch",
-          "Connects to Strava and fetches all run info to save locally") do |v|
+  opts.on('-f', '--[no-]fetch',
+          'Connects to Strava and fetches all run info to save locally') do |v|
     options[:fetch] = v
   end
-  opts.on_tail("-h", "--help", "Show this message") do
+  opts.on_tail('-h', '--help', 'Show this message') do
     puts opts
     exit
   end
@@ -44,21 +45,20 @@ logger.level = Logger::INFO
 strava = MyStrava.new(access_token: config['access_token'], logger: logger)
 
 if options[:fetch]
-  strava.fetch()
-elsif not options[:distance].nil?
-  puts "For distance: " + options[:distance]
+  strava.fetch
+elsif !options[:distance].nil?
+  puts 'For distance: ' + options[:distance]
   efforts = strava.best_efforts_for_distance(options[:distance])
-  efforts.each.with_index(1) do |row,idx|
-    puts format("%3d. %8s     (%s)",
-                idx, pretty_print_time(row[0]), Time.at(row[1]).strftime("%F"))
+  efforts.each.with_index(1) do |row, idx|
+    puts format('%3d. %8s     (%s)',
+                idx, pretty_print_time(row[0]), Time.at(row[1]).strftime('%F'))
   end
-elsif not options[:activity].nil?
-  puts "For activity: " + options[:activity]
+elsif !options[:activity].nil?
+  puts 'For activity: ' + options[:activity]
   efforts = strava.best_efforts_for_activity(options[:activity])
   efforts.each do |effort|
-    puts format("%6d: %8s", effort[0], pretty_print_time(effort[1]))
+    puts format('%6d: %8s', effort[0], pretty_print_time(effort[1]))
   end
 else
-  puts "Nothing to do..."
+  puts 'Nothing to do...'
 end
-

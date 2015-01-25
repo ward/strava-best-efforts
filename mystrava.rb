@@ -13,15 +13,15 @@ class TrueClass; def to_i; 1 end end
 # Can fetch information from the Strava API to save it locally
 # Performs queries on the locally saved data.
 class MyStrava
-	def initialize(options={})
+  def initialize(options={})
     raise ArgumentError if options[:access_token].nil?
 
     @logger = options[:logger] || Logger.new(STDOUT)
     @client = Strava::Api::V3::Client.new(access_token: options[:access_token], logger: @logger)
-    @db = SQLite3::Database.new "strava.db"
+    @db = SQLite3::Database.new 'strava.db'
     create_db_schema(@db)
-	end
-	
+  end
+
   # Contact Strava and fetch data to save locally
   def fetch
     fetch_and_save_runs(list_all_runs())
@@ -30,22 +30,22 @@ class MyStrava
   # Returns array of best efforts for a certain distance ordered from best to
   # worst. Each entry is an array [timeinseconds, startdateinseconds]
   def best_efforts_for_distance(distance)
-    return @db.execute("SELECT best_effort.elapsed_time, activity.start_date
+    return @db.execute('SELECT best_effort.elapsed_time, activity.start_date
                         FROM best_effort
                         JOIN activity
                         ON best_effort.activity_id = activity.id
                         WHERE best_effort.distance = ?
-                        ORDER BY best_effort.elapsed_time",
+                        ORDER BY best_effort.elapsed_time',
                         distance)
   end
 
   # Returns array of best efforts from a certain activity from shortest to
   # longest distance. Each entry is an array [distance, elapsed_time]
   def best_efforts_for_activity(activity)
-    return @db.execute("SELECT distance, elapsed_time
+    return @db.execute('SELECT distance, elapsed_time
                         FROM best_effort
                         WHERE activity_id = ?
-                        ORDER BY distance",
+                        ORDER BY distance',
                         activity)
   end
 
@@ -55,7 +55,7 @@ class MyStrava
 
   # Creates the correct schema in the sql database
   # Makes use of the create_tables.sql file
-  def create_db_schema db
+  def create_db_schema(db)
     sqlinput = File.open('create_tables.sql', 'r') { |f| f.read }
     db.execute_batch(sqlinput)
   end
@@ -70,15 +70,15 @@ class MyStrava
       @logger.info("Fetching activities page #{page}...")
       acts = @client.list_athlete_activities(per_page: 100, page: page)
       only_runs = acts.reject { |act| act['type'] != 'Run' }
-      runs = runs + only_runs
-      page = page + 1
+      runs += only_runs
+      page += 1
     end until acts.length == 0
 
     return runs
   end
-  
+
   # Takes as input a JSON run activity as retrieved from a specific API call
-  def save_run run
+  def save_run(run)
     # First build hash of what we will put in the db
     keyval = {}
 
@@ -108,8 +108,8 @@ class MyStrava
 
       # Now the best efforts
       run['best_efforts'].each do |effort|
-        @db.execute("INSERT INTO best_effort (distance, moving_time, elapsed_time, activity_id)
-                  VALUES (?,?,?,?)",
+        @db.execute('INSERT INTO best_effort (distance, moving_time, elapsed_time, activity_id)
+                  VALUES (?,?,?,?)',
                   [effort['distance'],
                    effort['moving_time'],
                    effort['elapsed_time'],
@@ -123,12 +123,12 @@ class MyStrava
 
   # Fetches list of all runs, fetches info for each run, saves information
   # locally.
-  def fetch_and_save_runs activities
+  def fetch_and_save_runs(activities)
     @logger.info "#{activities.length} activities found."
-    @logger.info "Fetching data for each."
+    @logger.info 'Fetching data for each.'
 
-    ids_in_db = @db.execute("SELECT id FROM activity").flatten
-    activities.each.with_index(1) do |activity,idx|
+    ids_in_db = @db.execute('SELECT id FROM activity').flatten
+    activities.each.with_index(1) do |activity, idx|
       if ids_in_db.include? activity['id']
         @logger.info "[#{idx}/#{activities.length}] Activity #{activity['id']} already in database"
         next
@@ -143,6 +143,6 @@ class MyStrava
         @logger.error "FAILED TO HANDLE ACTIVITY #{activity['id']}"
       end
     end
-    @logger.info "finished"
+    @logger.info 'finished'
   end
 end
